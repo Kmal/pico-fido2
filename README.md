@@ -150,3 +150,64 @@ A copy of the AGPLv3 license is available in the `LICENSE` file.
 
 ## Credits
 This project uses libraries and portion of code from other projects that are detailed in the `LICENSE` file.
+
+## M5Stack ESP32-S3 boards
+
+The ESP-IDF build supports two M5Stack ESP32-S3 devices in addition to the RP2040/Pico SDK builds:
+
+- `m5stack-cardputer-adv` — M5Stack Cardputer-Adv, ESP32-S3FN8, 8 MB flash, ST7789V2 LCD, TCA8418 keyboard, ES8311 audio, BMI270 IMU, and battery ADC on GPIO10.
+- `m5stack-stick-s3` — M5Stack StickS3, ESP32-S3-PICO-1-N8R8, 8 MB flash, 8 MB PSRAM, ST7789P3 LCD, ES8311 audio, BMI270 IMU, M5PM1 power management, IR TX/RX, and KEY1/KEY2 buttons.
+
+The board data is selected at build time with `PICO_BOARD`, matching the Raspberry Pico build pattern. The M5Stack ESP-IDF builds also use board-specific sdkconfig fragments for ESP32-S3 flash, PSRAM, and optional display settings.
+
+### M5Stack ESP32-S3 build examples
+
+Build Cardputer-Adv:
+
+```bash
+idf.py -D PICO_BOARD=m5stack_cardputer_adv -D SDKCONFIG="sdkconfig.m5stack_cardputer_adv" -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;sdkconfig.defaults.m5stack_cardputer_adv" set-target esp32s3 build
+```
+
+Build, flash, and monitor Cardputer-Adv:
+
+```bash
+idf.py -D PICO_BOARD=m5stack_cardputer_adv -D SDKCONFIG="sdkconfig.m5stack_cardputer_adv" -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;sdkconfig.defaults.m5stack_cardputer_adv" set-target esp32s3 build flash monitor
+```
+
+Build StickS3:
+
+```bash
+idf.py -D PICO_BOARD=m5stack_stick_s3 -D SDKCONFIG="sdkconfig.m5stack_stick_s3" -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;sdkconfig.defaults.m5stack_stick_s3" set-target esp32s3 build
+```
+
+Build, flash, and monitor StickS3:
+
+```bash
+idf.py -D PICO_BOARD=m5stack_stick_s3 -D SDKCONFIG="sdkconfig.m5stack_stick_s3" -D SDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;sdkconfig.defaults.m5stack_stick_s3" set-target esp32s3 build flash monitor
+```
+
+To build both M5Stack ESP32-S3 profiles and write board-named merged binaries into `release/`, run:
+
+```bash
+./build_m5stack_esp32s3.sh
+```
+
+### M5Stack download mode
+
+- Cardputer-Adv: switch power OFF, hold `G0`, apply USB power, then release `G0` after the host detects the bootloader.
+- StickS3: connect USB and hold the reset button until the internal green LED flashes.
+
+### User-presence behavior
+
+The ESP-IDF M5Stack profiles replace the default ESP32 BOOT/GPIO0 button path with the board-aware user-presence adapter and enable a default 15-second user-presence timeout when no provisioned timeout exists in PHY data.
+
+- Cardputer-Adv: any fresh TCA8418 keyboard key-press event confirms FIDO user presence.
+- StickS3: a transition from released to pressed on either KEY1 or KEY2 confirms FIDO user presence.
+
+### Hardware caveats
+
+- StickS3 IR receive is an RMT-style peripheral use case and should not be treated as plain GPIO polling.
+- StickS3 speaker amplifier power stays disabled by default because the M5Stack examples note that speaker and IR receive should not be active together.
+- StickS3 external 5 V output must not be enabled blindly; follow M5Stack EXT_5V_EN warnings before adding support.
+- Cardputer-Adv battery measurement is available through ADC on GPIO10.
+- The optional LCD status API is compiled as a no-op unless `CONFIG_PICO_FIDO2_M5_DISPLAY_STATUS=y` is enabled; when enabled, runtime status and two-line messages are queued to a display task so FIDO USB work is not blocked by LCD drawing.

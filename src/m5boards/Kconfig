@@ -1,0 +1,7 @@
+menu "Pico FIDO2 M5Stack boards"
+
+config PICO_FIDO2_M5_DISPLAY_STATUS
+    bool "Show authenticator status on M5Stack LCD"
+    default n
+
+endmenu

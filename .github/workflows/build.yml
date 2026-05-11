@@ -48,3 +48,24 @@ jobs:
         with:
           name: pico_fido2_${{ matrix.board }}
           path: build_ci/pico_fido2.uf2
+  build-esp32s3-m5stack:
+    name: Build ${{ matrix.board }}
+    strategy:
+      fail-fast: false
+      matrix:
+        board: [m5stack_cardputer_adv, m5stack_stick_s3]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Build M5Stack ESP32-S3 firmware
+        run: ./workflows/autobuild.sh m5stack ${{ matrix.board }}
+
+      - name: Upload M5Stack artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pico_fido2_${{ matrix.board }}
+          path: release/pico_fido2_${{ matrix.board }}-*.bin

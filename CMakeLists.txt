@@ -22,7 +22,23 @@ set(USB_PID 0x619B)
 
 if(ESP_PLATFORM)
     set(DEBUG_APDU 1)
+    if(NOT DEFINED PICO_BOARD)
+        set(PICO_BOARD esp32s3 CACHE STRING "ESP-IDF board profile")
+    endif()
+    set(PICO_FIDO2_M5STACK_BOARDS
+        m5stack_cardputer_adv
+        m5stack_stick_s3
+    )
+    list(FIND PICO_FIDO2_M5STACK_BOARDS "${PICO_BOARD}" PICO_FIDO2_M5STACK_BOARD_INDEX)
+    if(PICO_FIDO2_M5STACK_BOARD_INDEX GREATER_EQUAL 0)
+        set(PICO_FIDO2_M5STACK_BOARD ON CACHE INTERNAL "Build M5Stack ESP32-S3 board support")
+    else()
+        set(PICO_FIDO2_M5STACK_BOARD OFF CACHE INTERNAL "Build M5Stack ESP32-S3 board support")
+    endif()
     set(EXTRA_COMPONENT_DIRS src/fido2 pico-keys-sdk/src)
+    if(PICO_FIDO2_M5STACK_BOARD)
+        list(APPEND EXTRA_COMPONENT_DIRS src/m5boards)
+    endif()
     include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 else()
 
@@ -76,6 +92,17 @@ endif()
 set(USB_ITF_HID 1)
 include(pico-keys-sdk/pico_keys_sdk_import.cmake)
 
+if(ESP_PLATFORM AND PICO_FIDO2_M5STACK_BOARD)
+    list(REMOVE_ITEM PICO_KEYS_SOURCES
+        ${CMAKE_CURRENT_LIST_DIR}/pico-keys-sdk/src/button.c
+        ${CMAKE_CURRENT_LIST_DIR}/pico-keys-sdk/src/fs/phy.c
+    )
+    list(REMOVE_ITEM PICOKEYS_SOURCES
+        ${CMAKE_CURRENT_LIST_DIR}/pico-keys-sdk/src/button.c
+        ${CMAKE_CURRENT_LIST_DIR}/pico-keys-sdk/src/fs/phy.c
+    )
+endif()
+
 if(NOT ESP_PLATFORM)
     set(SOURCES ${PICO_KEYS_SOURCES})
 endif()
@@ -122,6 +149,13 @@ list(APPEND SOURCES
     ${CMAKE_CURRENT_LIST_DIR}/pico-openpgp/src/openpgp/cmd_reset_retry.c
     ${CMAKE_CURRENT_LIST_DIR}/pico-openpgp/src/openpgp/do.c
 )
+if(ESP_PLATFORM AND PICO_FIDO2_M5STACK_BOARD)
+    list(APPEND SOURCES
+        ${CMAKE_CURRENT_LIST_DIR}/src/fido2/m5stack_button.c
+        ${CMAKE_CURRENT_LIST_DIR}/src/fido2/m5stack_phy.c
+    )
+endif()
+
 if(ENABLE_OATH_APP)
     list(APPEND SOURCES
         ${CMAKE_CURRENT_LIST_DIR}/pico-fido/src/fido/oath.c
