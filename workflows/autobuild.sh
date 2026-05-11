@@ -48,6 +48,19 @@ mkdir -p release
 cd build
 esptool.py --chip ESP32-S2 merge_bin -o ../release/pico_fido_esp32-s2.bin @flash_args
 cd ..
+elif [[ $1 == "m5stack" ]]; then
+sudo apt install -y git wget flex bison gperf python3 python3-pip python3-venv cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
+git clone --recursive https://github.com/espressif/esp-idf.git
+cd esp-idf
+git checkout tags/v5.5
+./install.sh esp32s3
+. ./export.sh
+cd ..
+if [[ $# -gt 1 ]]; then
+./build_m5stack_esp32s3.sh "$2"
+else
+./build_m5stack_esp32s3.sh
+fi
 else
 mkdir build
 cd build
