@@ -2,7 +2,13 @@
 
 #include "sdkconfig.h"
 
-#if CONFIG_PICO_FIDO2_M5_DISPLAY_STATUS
+#ifdef CONFIG_PICO_FIDO2_M5_DISPLAY_STATUS
+#define PF2_M5_DISPLAY_STATUS_ENABLED CONFIG_PICO_FIDO2_M5_DISPLAY_STATUS
+#else
+#define PF2_M5_DISPLAY_STATUS_ENABLED 0
+#endif
+
+#if PF2_M5_DISPLAY_STATUS_ENABLED
 #include "driver/gpio.h"
 #include "driver/spi_master.h"
 #include "esp_bit_defs.h"
@@ -19,7 +25,7 @@ static pf2_status_t s_status;
 static const char *s_line1;
 static const char *s_line2;
 
-#if CONFIG_PICO_FIDO2_M5_DISPLAY_STATUS
+#if PF2_M5_DISPLAY_STATUS_ENABLED
 static spi_device_handle_t s_lcd_spi;
 static QueueHandle_t s_status_queue;
 static TaskHandle_t s_display_task;
@@ -251,7 +257,7 @@ static void display_queue_state(void) {
 esp_err_t pf2_display_init(const pf2_lcd_desc_t *lcd) {
   s_lcd = lcd;
   s_status = PF2_STATUS_BOOT;
-#if CONFIG_PICO_FIDO2_M5_DISPLAY_STATUS
+#if PF2_M5_DISPLAY_STATUS_ENABLED
   if (!lcd) {
     return ESP_ERR_INVALID_ARG;
   }
@@ -340,7 +346,7 @@ esp_err_t pf2_display_init(const pf2_lcd_desc_t *lcd) {
 
 void pf2_display_set_status(pf2_status_t status) {
   s_status = status;
-#if CONFIG_PICO_FIDO2_M5_DISPLAY_STATUS
+#if PF2_M5_DISPLAY_STATUS_ENABLED
   s_display_state.status = status;
   display_queue_state();
 #endif
@@ -349,7 +355,7 @@ void pf2_display_set_status(pf2_status_t status) {
 void pf2_display_set_message(const char *line1, const char *line2) {
   s_line1 = line1;
   s_line2 = line2;
-#if CONFIG_PICO_FIDO2_M5_DISPLAY_STATUS
+#if PF2_M5_DISPLAY_STATUS_ENABLED
   snprintf(s_display_state.line1, sizeof(s_display_state.line1), "%s",
            line1 ? line1 : "");
   snprintf(s_display_state.line2, sizeof(s_display_state.line2), "%s",
