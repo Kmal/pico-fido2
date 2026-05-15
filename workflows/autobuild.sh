@@ -1,7 +1,21 @@
 #!/bin/bash
+set -euo pipefail
 
 git submodule update --init --recursive
 sudo apt update
+
+install_esp_idf() {
+    if [[ ! -d esp-idf ]]; then
+        git clone --depth 1 --branch v5.5 --recursive --shallow-submodules \
+            https://github.com/espressif/esp-idf.git
+    fi
+    cd esp-idf
+    git checkout tags/v5.5
+    git submodule update --init --recursive --depth 1
+    ./install.sh "$@"
+    . ./export.sh
+    cd ..
+}
 
 if [[ $1 == "pico" ]]; then
 sudo apt install -y cmake gcc-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
@@ -26,12 +40,7 @@ make
 cd ..
 elif [[ $1 == "esp32" ]]; then
 sudo apt install -y git wget flex bison gperf python3 python3-pip python3-venv cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
-git clone --recursive https://github.com/espressif/esp-idf.git
-cd esp-idf
-git checkout tags/v5.5
-./install.sh esp32s3
-. ./export.sh
-cd ..
+install_esp_idf esp32s3
 idf.py set-target esp32s3
 idf.py all
 mkdir -p release
@@ -50,12 +59,7 @@ esptool.py --chip ESP32-S2 merge_bin -o ../release/pico_fido_esp32-s2.bin @flash
 cd ..
 elif [[ $1 == "m5stack" ]]; then
 sudo apt install -y git wget flex bison gperf python3 python3-pip python3-venv cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
-git clone --recursive https://github.com/espressif/esp-idf.git
-cd esp-idf
-git checkout tags/v5.5
-./install.sh esp32s3
-. ./export.sh
-cd ..
+install_esp_idf esp32s3
 if [[ $# -gt 1 ]]; then
 ./build_m5stack_esp32s3.sh "$2"
 else
