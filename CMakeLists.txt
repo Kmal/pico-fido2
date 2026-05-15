@@ -103,8 +103,9 @@ if(ESP_PLATFORM AND PICO_FIDO2_M5STACK_BOARD)
     )
 endif()
 
-if(NOT ESP_PLATFORM)
-    set(SOURCES ${PICO_KEYS_SOURCES})
+set(SOURCES ${PICO_KEYS_SOURCES})
+if(ESP_PLATFORM)
+    list(APPEND SOURCES ${CBOR_SOURCES})
 endif()
 
 list(APPEND SOURCES
@@ -169,6 +170,8 @@ endif()
 
 SET_VERSION(ver_major ver_minor "${CMAKE_CURRENT_LIST_DIR}/pico-fido/src/fido/version.h" 1)
 if(ESP_PLATFORM)
+    set(SOURCES ${SOURCES} CACHE INTERNAL "ESP-IDF fido2 component sources")
+    set(INCLUDES ${INCLUDES} CACHE INTERNAL "ESP-IDF fido2 component includes")
     project(pico_fido2)
 endif()
 set(INCLUDES ${INCLUDES}
